@@ -1,15 +1,6 @@
 import type { AgentCard, AgentSkill } from "@a2a-js/sdk";
-import { AGENT_CARD_PATH } from "@a2a-js/sdk";
 
 import type { GatewayConfig } from "./types.js";
-
-function normalizePath(path: string): string {
-  if (path.startsWith("/")) {
-    return path;
-  }
-
-  return `/${path}`;
-}
 
 function toSkill(entry: string | { id?: string; name: string; description?: string }, index: number): AgentSkill {
   if (typeof entry === "string") {
@@ -31,8 +22,7 @@ function toSkill(entry: string | { id?: string; name: string; description?: stri
 
 export function buildAgentCard(config: GatewayConfig): AgentCard {
   const configuredUrl = config.agentCard.url;
-  const cardPath = normalizePath(AGENT_CARD_PATH);
-  const fallbackUrl = `http://${config.server.host}:${config.server.port}${cardPath}`;
+  const fallbackUrl = `http://${config.server.host}:${config.server.port}/a2a/jsonrpc`;
 
   const securitySchemes: AgentCard["securitySchemes"] = {};
   const security: AgentCard["security"] = [];

@@ -12,6 +12,11 @@
     "express": "^4.21.2",
     "uuid": "^9.0.1"
   },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.3.0",

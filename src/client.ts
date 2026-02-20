@@ -19,9 +19,14 @@ function buildAuthHeaders(peer: PeerConfig): Record<string, string> {
   };
 }
 
-function toJsonRpcUrl(agentCardUrl: string): string {
-  const parsed = new URL(agentCardUrl);
-  return `${parsed.origin}/a2a/jsonrpc`;
+function toJsonRpcUrl(cardUrl: string): string {
+  // Per A2A spec, the card's `url` field IS the service endpoint.
+  // Only fall back to appending /a2a/jsonrpc if the URL looks like a card discovery URL.
+  if (cardUrl.includes(".well-known")) {
+    const parsed = new URL(cardUrl);
+    return `${parsed.origin}/a2a/jsonrpc`;
+  }
+  return cardUrl;
 }
 
 async function parseJsonSafe(response: Response): Promise<unknown> {
@@ -42,6 +47,7 @@ export class A2AClient {
     const response = await fetch(peer.agentCardUrl, {
       method: "GET",
       headers: buildAuthHeaders(peer),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!response.ok) {
@@ -76,6 +82,7 @@ export class A2AClient {
         ...buildAuthHeaders(peer),
       },
       body: JSON.stringify(jsonRpcRequest),
+      signal: AbortSignal.timeout(30_000),
     });
 
     return {

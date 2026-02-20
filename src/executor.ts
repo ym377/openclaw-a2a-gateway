@@ -33,6 +33,18 @@ export class OpenClawAgentExecutor implements AgentExecutor {
     const taskId = requestContext.taskId;
     const contextId = requestContext.contextId;
 
+    // Publish initial "working" state so the task is trackable during async dispatch
+    const workingTask: Task = {
+      kind: "task",
+      id: taskId,
+      contextId,
+      status: {
+        state: "working",
+        timestamp: new Date().toISOString(),
+      },
+    };
+    eventBus.publish(workingTask);
+
     let responseText = "";
 
     try {
@@ -89,7 +101,17 @@ export class OpenClawAgentExecutor implements AgentExecutor {
     eventBus.finished();
   }
 
-  async cancelTask(_taskId: string, eventBus: ExecutionEventBus): Promise<void> {
+  async cancelTask(taskId: string, eventBus: ExecutionEventBus): Promise<void> {
+    const canceledTask: Task = {
+      kind: "task",
+      id: taskId,
+      contextId: taskId,
+      status: {
+        state: "canceled",
+        timestamp: new Date().toISOString(),
+      },
+    };
+    eventBus.publish(canceledTask);
     eventBus.finished();
   }
 

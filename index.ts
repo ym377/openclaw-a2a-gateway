@@ -147,8 +147,18 @@ const plugin = {
     const agentCard = buildAgentCard(config);
 
     // SDK expects userBuilder(req) -> Promise<User>
-    // v0.3.0 SDK ships only UnauthenticatedUser helper in UserBuilder.
-    const userBuilder = async (_req: unknown) => UserBuilder.noAuthentication();
+    // When bearer auth is configured, validate the Authorization header.
+    const userBuilder = async (req: { headers?: Record<string, string | string[] | undefined> }) => {
+      if (config.security.inboundAuth === "bearer" && config.security.token) {
+        const authHeader = req.headers?.authorization;
+        const header = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+        const expected = `Bearer ${config.security.token}`;
+        if (!header || header !== expected) {
+          throw jsonRpcError(null, -32000, "Unauthorized: invalid or missing bearer token");
+        }
+      }
+      return UserBuilder.noAuthentication();
+    };
 
     const requestHandler = new DefaultRequestHandler(agentCard, taskStore, executor);
 
