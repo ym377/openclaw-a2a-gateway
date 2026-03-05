@@ -157,7 +157,7 @@ node <WORKSPACE>/plugins/a2a-gateway/skill/scripts/a2a-send.mjs \
   --token <PEER_TOKEN> \
   --non-blocking \
   --wait \
-  --timeout-ms 300000 \
+  --timeout-ms 600000 \
   --poll-ms 1000 \
   --message "Discuss A2A advantages in 3 rounds and provide final conclusion"
 ```

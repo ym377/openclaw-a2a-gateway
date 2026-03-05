@@ -167,12 +167,14 @@ node <PLUGIN_PATH>/skill/scripts/a2a-send.mjs \
   --token <PEER_TOKEN> \
   --non-blocking \
   --wait \
-  --timeout-ms 300000 \
+  --timeout-ms 600000 \
   --poll-ms 1000 \
   --message "Discuss A2A advantages in 3 rounds and provide final conclusion"
 ```
 
 This sends `configuration.blocking=false` and then polls `tasks/get` until the task reaches a terminal state.
+
+Tip: the default `--timeout-ms` for the script is 10 minutes; override it for very long tasks.
 
 ### Target a specific OpenClaw agentId (OpenClaw extension)
 

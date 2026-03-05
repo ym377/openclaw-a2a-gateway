@@ -167,7 +167,7 @@ node <插件路径>/skill/scripts/a2a-send.mjs \
   --token <对等方Token> \
   --non-blocking \
   --wait \
-  --timeout-ms 300000 \
+  --timeout-ms 600000 \
   --poll-ms 1000 \
   --message "用 3 轮讨论 A2A 通信的优势并给出最终结论"
 ```

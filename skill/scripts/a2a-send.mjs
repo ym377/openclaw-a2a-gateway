@@ -15,7 +15,7 @@
  *   --message <text>        Text to send
  *   --non-blocking          Send with configuration.blocking=false (returns quickly with a Task)
  *   --wait                  When non-blocking, poll tasks/get until terminal state
- *   --timeout-ms <ms>       Max wait time for --wait (default: 300000)
+ *   --timeout-ms <ms>       Max wait time for --wait (default: 600000)
  *   --poll-ms <ms>          Poll interval for --wait (default: 1000)
  *
  * Optional (OpenClaw extension):
@@ -100,7 +100,8 @@ async function main() {
   const timeoutMsRaw = opts["timeout-ms"] || opts.timeoutMs;
   const pollMsRaw = opts["poll-ms"] || opts.pollMs;
 
-  const timeoutMs = timeoutMsRaw ? Number(timeoutMsRaw) : 300_000;
+  // Default wait timeout: 10 minutes. Long agent runs are common in multi-round discussions.
+  const timeoutMs = timeoutMsRaw ? Number(timeoutMsRaw) : 600_000;
   const pollMs = pollMsRaw ? Number(pollMsRaw) : 1_000;
 
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
