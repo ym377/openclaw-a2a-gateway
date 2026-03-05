@@ -475,6 +475,13 @@ Production-grade async task mode (PRs welcome):
 - Concurrency limits / queueing for inbound A2A dispatch to protect the OpenClaw gateway
 - Observability: structured logs + metrics for task durations/timeouts
 
+File / image transfer support (PRs welcome):
+
+- Support A2A `file` parts end-to-end (URI + optional bytes/base64)
+- Extend `a2a-send.mjs` with `--file-uri` / `--file-path` to send `kind:"file"` parts
+- Plugin-side handling: fetch URI to a temp file (or pass URI through) and dispatch to the target OpenClaw agent with a safe reference
+- Security: size limits, mime allowlist, SSRF protections for URI fetches, and redaction of bytes in logs
+
 ## License
 
 MIT

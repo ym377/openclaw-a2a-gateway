@@ -459,6 +459,23 @@ Skill 提供两种 agent 调用方式：
 
 Agent 会自动按照 skill 的流程执行。
 
+## TODO / 路线图
+
+生产级异步 task 模式（欢迎 PR）：
+
+- 将任务持久化到磁盘（替换 `InMemoryTaskStore`），使 `tasks/get` 在 gateway 重启后不丢
+- 提供更适合流式输出的路径（SSE / sendMessageStream）
+- Push notifications 支持（store + sender），用于超长任务的异步回调
+- 并发限制 / 队列：保护 OpenClaw gateway 不被大量入站 A2A 请求压垮
+- 可观测性：结构化日志 + 指标（任务耗时/超时/失败率）
+
+文件 / 图像传输能力（欢迎 PR）：
+
+- 端到端支持 A2A `file` parts（URI + 可选 bytes/base64）
+- 扩展 `a2a-send.mjs`：增加 `--file-uri` / `--file-path`，发送 `kind:"file"` parts
+- 插件侧处理：下载 URI 到临时文件（或安全透传 URI），再以安全引用的方式交给目标 OpenClaw agent
+- 安全：大小限制、mime allowlist、URI fetch 的 SSRF 防护、以及日志中对 bytes 的脱敏/禁止输出
+
 ## 许可证
 
 MIT
