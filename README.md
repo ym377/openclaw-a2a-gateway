@@ -475,6 +475,24 @@ Production-grade async task mode (PRs welcome):
 - Concurrency limits / queueing for inbound A2A dispatch to protect the OpenClaw gateway
 - Observability: structured logs + metrics for task durations/timeouts
 
+Interoperability & transport resilience (PRs welcome):
+
+- Peer health checks + retry/backoff + circuit breaker (per-peer)
+- Automatic transport fallback (prefer JSON-RPC by default; fall back between JSON-RPC/REST/GRPC based on failures)
+- Cross-implementation compatibility test matrix (ensure interop with other A2A servers/clients)
+
+Security & auth hardening (PRs welcome):
+
+- SSRF protections + allowlists for any URI fetching (needed for file parts)
+- File size limits + MIME allowlist + content sniffing
+- Token rotation / keyring (accept multiple tokens during rotation window)
+- Audit log for inbound/outbound A2A calls (who/when/peer/taskId)
+
+Routing & orchestration (PRs welcome):
+
+- Rule-based routing: choose peer + target OpenClaw agentId based on message type/tags
+- Explicit multi-round conversation support (carry context via taskId/contextId)
+
 File / image transfer support (PRs welcome):
 
 - Support A2A `file` parts end-to-end (URI + optional bytes/base64)

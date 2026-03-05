@@ -469,6 +469,24 @@ Agent 会自动按照 skill 的流程执行。
 - 并发限制 / 队列：保护 OpenClaw gateway 不被大量入站 A2A 请求压垮
 - 可观测性：结构化日志 + 指标（任务耗时/超时/失败率）
 
+互操作与传输韧性（欢迎 PR）：
+
+- Peer 健康检查 + retry/backoff + 熔断（按 peer 维度）
+- 自动传输降级（默认 JSON-RPC；在 JSON-RPC/REST/GRPC 之间按失败情况切换）
+- 跨实现兼容性测试矩阵（确保与其他 A2A server/client 互通）
+
+安全与鉴权增强（欢迎 PR）：
+
+- URI fetch 的 SSRF 防护 + allowlist（为 file parts 做准备）
+- 文件大小限制 + MIME allowlist + 内容嗅探
+- Token 轮换 / keyring（轮换窗口内同时接受多 token）
+- 入站/出站 A2A 调用审计日志（who/when/peer/taskId）
+
+路由与编排（欢迎 PR）：
+
+- 规则路由：按消息类型/标签自动选择 peer + 目标 OpenClaw agentId
+- 显式多轮对话支持（通过 taskId/contextId 传递上下文）
+
 文件 / 图像传输能力（欢迎 PR）：
 
 - 端到端支持 A2A `file` parts（URI + 可选 bytes/base64）
