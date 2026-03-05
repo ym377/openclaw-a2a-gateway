@@ -47,11 +47,25 @@ Extract it with:
 ... | python3 -c "import sys,json; r=json.load(sys.stdin); parts=r.get('result',{}).get('status',{}).get('message',{}).get('parts',[]); print(parts[0]['text'] if parts else 'No response')"
 ```
 
+### Alternative: SDK script (recommended for complex interactions)
+
+When `@a2a-js/sdk` is available, use the SDK script for type-safe, auto-discovering calls:
+
+```bash
+node <WORKSPACE>/plugins/a2a-gateway/skill/scripts/a2a-send.mjs \
+  --peer-url http://<PEER_IP>:18800 \
+  --token <PEER_TOKEN> \
+  --message "YOUR MESSAGE HERE"
+```
+
+The script automatically discovers the Agent Card and selects the best transport (JSON-RPC or REST).
+
 ### Notes
 
-- Always generate a unique messageId (e.g., `msg-$(date +%s)`)
+- Always generate a unique messageId (e.g., `msg-$(date +%s)`) when using curl
 - Allow up to 120s timeout for complex tasks
 - If the peer returns an error, check the token and network connectivity
+- The SDK script handles messageId generation and response parsing automatically
 ```
 
 ---

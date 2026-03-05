@@ -125,9 +125,20 @@ curl -s http://<PEER_IP>:18800/.well-known/agent.json | python3 -m json.tool
 
 Read `references/tools-md-template.md` and append the A2A section to the agent's `TOOLS.md`, replacing placeholders with actual peer info.
 
+Two calling methods are available (include both in TOOLS.md):
+
+- **curl** — universal, works in any environment with shell access
+- **SDK script** (`scripts/a2a-send.mjs`) — uses official `@a2a-js/sdk` ClientFactory, type-safe, auto-discovers transport
+
+To use the SDK script, ensure `@a2a-js/sdk` is installed in the plugin directory:
+
+```bash
+cd <WORKSPACE>/plugins/a2a-gateway && npm ls @a2a-js/sdk
+```
+
 ## Step 10: End-to-End Test
 
-Send a test message to verify the full chain:
+### Method A: curl
 
 ```bash
 curl -s -X POST http://<PEER_IP>:18800/a2a/jsonrpc \
@@ -148,6 +159,17 @@ curl -s -X POST http://<PEER_IP>:18800/a2a/jsonrpc \
 ```
 
 The response should contain the peer agent's reply at `result.status.message.parts[0].text`.
+
+### Method B: SDK script (recommended)
+
+```bash
+node <WORKSPACE>/plugins/a2a-gateway/skill/scripts/a2a-send.mjs \
+  --peer-url http://<PEER_IP>:18800 \
+  --token <PEER_TOKEN> \
+  --message "Hello, what is your name?"
+```
+
+The script uses `@a2a-js/sdk` ClientFactory with auto agent card discovery and transport selection.
 
 ## Network: Tailscale Setup (if needed)
 
