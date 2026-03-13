@@ -22,6 +22,7 @@ import { OpenClawAgentExecutor } from "./src/executor.js";
 import { QueueingAgentExecutor } from "./src/queueing-executor.js";
 import { FileTaskStore } from "./src/task-store.js";
 import { GatewayTelemetry } from "./src/telemetry.js";
+import { AuditLogger } from "./src/audit.js";
 import { PeerHealthManager } from "./src/peer-health.js";
 import type {
   AgentCardConfig,
@@ -204,6 +205,7 @@ function parseConfig(raw: unknown, resolvePath?: (nextPath: string) => string): 
       structuredLogs: asBoolean(observability.structuredLogs, true),
       exposeMetricsEndpoint: asBoolean(observability.exposeMetricsEndpoint, true),
       metricsPath: normalizeHttpPath(asString(observability.metricsPath, "/a2a/metrics"), "/a2a/metrics"),
+      auditLogPath: resolveConfiguredPath(observability.auditLogPath, "data/audit.jsonl", resolvePath),
     },
     timeouts: {
       agentResponseTimeoutMs: asNumber(timeouts.agentResponseTimeoutMs, 300_000),
@@ -245,6 +247,7 @@ const plugin = {
     const telemetry = new GatewayTelemetry(api.logger, {
       structuredLogs: config.observability.structuredLogs,
     });
+    const auditLogger = new AuditLogger(config.observability.auditLogPath);
     const client = new A2AClient();
     const taskStore = new FileTaskStore(config.storage.tasksDir);
     const executor = new QueueingAgentExecutor(
@@ -285,6 +288,11 @@ const plugin = {
       telemetry.setPeerStateProvider(() => healthManager.getAllStates());
     }
 
+    // Wire audit logger for inbound task completion
+    telemetry.setTaskAuditCallback((taskId, contextId, state, durationMs) => {
+      auditLogger.recordInbound(taskId, contextId, state, durationMs);
+    });
+
     // SDK expects userBuilder(req) -> Promise<User>
     // When bearer auth is configured, validate the Authorization header.
     const userBuilder = async (req: { headers?: Record<string, string | string[] | undefined> }) => {
@@ -294,6 +302,7 @@ const plugin = {
         const providedToken = typeof header === "string" && header.startsWith("Bearer ") ? header.slice(7) : "";
         if (!providedToken || !config.security.validTokens.has(providedToken)) {
           telemetry.recordSecurityRejection("http", "invalid or missing bearer token");
+          auditLogger.recordSecurityEvent("http", "invalid or missing bearer token");
           throw jsonRpcError(null, -32000, "Unauthorized: invalid or missing bearer token");
         }
       }
@@ -378,6 +387,15 @@ const plugin = {
       });
     });
 
+    api.registerGatewayMethod("a2a.audit", ({ params, respond }) => {
+      const payload = asObject(params);
+      const count = Math.min(Math.max(1, asNumber(payload.count, 50)), 500);
+      auditLogger
+        .tail(count)
+        .then((entries) => respond(true, { entries, count: entries.length }))
+        .catch((error) => respond(false, { error: String(error?.message || error) }));
+    });
+
     api.registerGatewayMethod("a2a.send", ({ params, respond }) => {
       const payload = asObject(params);
       const peerName = asString(payload.peer || payload.name, "");
@@ -403,12 +421,9 @@ const plugin = {
       client
         .sendMessage(peer, message, sendOptions)
         .then((result) => {
-          telemetry.recordOutboundRequest(
-            peer.name,
-            result.ok,
-            result.statusCode,
-            Date.now() - startedAt,
-          );
+          const outDuration = Date.now() - startedAt;
+          telemetry.recordOutboundRequest(peer.name, result.ok, result.statusCode, outDuration);
+          auditLogger.recordOutbound(peer.name, result.ok, result.statusCode, outDuration);
           if (result.ok) {
             respond(true, {
               statusCode: result.statusCode,
@@ -423,7 +438,9 @@ const plugin = {
           });
         })
         .catch((error) => {
-          telemetry.recordOutboundRequest(peer.name, false, 500, Date.now() - startedAt);
+          const errDuration = Date.now() - startedAt;
+          telemetry.recordOutboundRequest(peer.name, false, 500, errDuration);
+          auditLogger.recordOutbound(peer.name, false, 500, errDuration);
           respond(false, { error: String(error?.message || error) });
         });
     });
@@ -564,6 +581,7 @@ const plugin = {
               const providedToken = header.startsWith("Bearer ") ? header.slice(7) : "";
               if (!providedToken || !config.security.validTokens.has(providedToken)) {
                 telemetry.recordSecurityRejection("grpc", "invalid or missing bearer token");
+                auditLogger.recordSecurityEvent("grpc", "invalid or missing bearer token");
                 const err: any = new Error("Unauthorized: invalid or missing bearer token");
                 err.code = GrpcStatus.UNAUTHENTICATED;
                 throw err;
@@ -609,6 +627,7 @@ const plugin = {
       async stop(_ctx) {
         // Stop peer health checks
         healthManager?.stop();
+        auditLogger.close();
 
         // Stop gRPC server
         if (grpcServer) {

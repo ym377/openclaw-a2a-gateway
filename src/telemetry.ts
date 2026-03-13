@@ -8,6 +8,9 @@ type TerminalTaskState = "completed" | "failed" | "canceled" | "rejected";
 /** Callback to get peer states without importing PeerHealthManager directly. */
 export type PeerStateProvider = () => Map<string, PeerState>;
 
+/** Callback for audit logging on task completion. */
+export type TaskAuditCallback = (taskId: string, contextId: string, state: string, durationMs: number) => void;
+
 interface HttpMetrics {
   requests_total: number;
   jsonrpc_requests: number;
@@ -87,6 +90,7 @@ export class GatewayTelemetry {
 
   private readonly peerRetries: Record<string, number> = {};
   private peerStateProvider: PeerStateProvider | null = null;
+  private taskAuditCallback: TaskAuditCallback | null = null;
 
   constructor(logger: LoggerLike, options: GatewayTelemetryOptions = {}) {
     this.logger = logger;
@@ -96,6 +100,11 @@ export class GatewayTelemetry {
   /** Register a callback to retrieve peer health states for the metrics snapshot. */
   setPeerStateProvider(provider: PeerStateProvider): void {
     this.peerStateProvider = provider;
+  }
+
+  /** Register a callback for audit logging on task completion. */
+  setTaskAuditCallback(callback: TaskAuditCallback): void {
+    this.taskAuditCallback = callback;
   }
 
   recordInboundHttp(route: "jsonrpc" | "rest" | "metrics", statusCode: number, durationMs: number): void {
@@ -231,6 +240,8 @@ export class GatewayTelemetry {
       queue_depth: queueDepth,
       error: errorMessage,
     });
+
+    this.taskAuditCallback?.(taskId, contextId, state, durationMs);
   }
 
   recordQueueRejected(taskId: string, contextId: string, queueDepth: number): void {
