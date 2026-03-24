@@ -260,6 +260,29 @@
           }
         }
       },
+      "advertise": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "mDNS self-advertisement. When enabled, the gateway publishes SRV + TXT records on the local network so other A2A gateways can discover it automatically.",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable mDNS self-advertisement (requires multicast-dns)"
+          },
+          "serviceName": {
+            "type": "string",
+            "default": "_a2a._tcp.local",
+            "description": "DNS-SD service type to advertise"
+          },
+          "ttl": {
+            "type": "number",
+            "default": 120,
+            "minimum": 10,
+            "description": "TTL in seconds for advertised DNS records"
+          }
+        }
+      },
       "discovery": {
         "type": "object",
         "additionalProperties": false,

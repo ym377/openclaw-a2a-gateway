@@ -24,6 +24,10 @@ import {
   mergeWithStaticPeers,
   parseDnsDiscoveryConfig,
 } from "./src/dns-discovery.js";
+import {
+  MdnsResponder,
+  buildMdnsAdvertiseConfig,
+} from "./src/dns-responder.js";
 import { OpenClawAgentExecutor } from "./src/executor.js";
 import { QueueingAgentExecutor } from "./src/queueing-executor.js";
 import { runTaskCleanup } from "./src/task-cleanup.js";
@@ -249,6 +253,14 @@ export function parseConfig(raw: unknown, resolvePath?: (nextPath: string) => st
       },
     },
     discovery: parseDnsDiscoveryConfig(discoveryRaw),
+    advertise: buildMdnsAdvertiseConfig({
+      agentCardName: asString(asObject(config.agentCard).name, "OpenClaw A2A Gateway"),
+      serverHost: asString(asObject(config.server).host, "0.0.0.0"),
+      serverPort: asNumber(asObject(config.server).port, 18800),
+      inboundAuth: asString(asObject(config.security).inboundAuth, "none"),
+      token: asString(asObject(config.security).token, "") || undefined,
+      raw: config.advertise ? asObject(config.advertise) : undefined,
+    }),
   };
 }
 
@@ -317,6 +329,19 @@ const plugin = {
     // DNS-SD discovery manager (disabled by default)
     const discoveryManager = config.discovery.enabled
       ? new DnsDiscoveryManager(config.discovery, (level, msg, details) => {
+          if (level === "error") {
+            api.logger.error(details ? `${msg}: ${JSON.stringify(details)}` : msg);
+          } else if (level === "warn") {
+            api.logger.warn(details ? `${msg}: ${JSON.stringify(details)}` : msg);
+          } else {
+            api.logger.info(details ? `${msg}: ${JSON.stringify(details)}` : msg);
+          }
+        })
+      : null;
+
+    // mDNS responder for self-advertisement (disabled by default)
+    const mdnsResponder = config.advertise.enabled
+      ? new MdnsResponder(config.advertise, (level, msg, details) => {
           if (level === "error") {
             api.logger.error(details ? `${msg}: ${JSON.stringify(details)}` : msg);
           } else if (level === "warn") {
@@ -845,8 +870,14 @@ const plugin = {
         api.logger.info(
           `a2a-gateway: task cleanup enabled — ttl=${config.storage.taskTtlHours}h interval=${config.storage.cleanupIntervalMinutes}min`,
         );
+
+        // Start mDNS self-advertisement (after HTTP is listening)
+        mdnsResponder?.start();
       },
       async stop(_ctx) {
+        // Stop mDNS self-advertisement (sends goodbye packet)
+        mdnsResponder?.stop();
+
         // Stop DNS-SD discovery
         discoveryManager?.stop();
 

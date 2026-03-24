@@ -567,10 +567,9 @@ Agent 会自动按照 skill 的流程执行。
 - ✅ 规则路由：按消息 pattern/tags/skills 自动选择 peer + agentId (PR #39)
 - ✅ DNS-SD 动态 Agent 发现：SRV + TXT 记录 (PR #40)
 - ✅ peer Agent Card skills 缓存已接入路由规则（skills 匹配生效）
+- ✅ mDNS 自广播 — 发布 SRV + TXT 记录，其他 gateway 可自动发现本实例（`advertise.enabled: true`）
 
 ### 待做（欢迎 PR）
-
-- mDNS 自广播（让本 gateway 可被其他 gateway 自动发现）
 - 对接 SDK 原生 Push Notification 流程（当前为自定义实现）
 
 ## 许可证

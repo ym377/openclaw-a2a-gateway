@@ -119,6 +119,8 @@ export interface GatewayConfig {
   resilience: PeerResilienceConfig;
   /** DNS-SD discovery configuration. Disabled by default. */
   discovery: DnsDiscoveryConfig;
+  /** mDNS advertisement configuration. Disabled by default. */
+  advertise: import("./dns-responder.js").MdnsAdvertiseConfig;
 }
 
 // ---------------------------------------------------------------------------

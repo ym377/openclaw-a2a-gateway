@@ -577,10 +577,9 @@ The agent will follow the skill's procedure automatically.
 - ✅ Rule-based routing: auto-select peer + agentId based on message pattern/tags/skills (PR #39)
 - ✅ DNS-SD dynamic agent discovery via SRV + TXT records (PR #40)
 - ✅ `peerSkills` map wired from Agent Card health-check cache into routing rules (skills matching now works)
+- ✅ mDNS self-advertisement — publish SRV + TXT records so other gateways discover this instance automatically (`advertise.enabled: true`)
 
 ### Next
-
-- mDNS self-advertisement (make this gateway discoverable by other gateways)
 - SDK-native push notification integration (currently custom implementation with `pushNotifications: false`)
 
 ## License
