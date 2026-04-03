@@ -1,6 +1,6 @@
 {
   "name": "a2a-gateway",
-  "version": "1.0.1",
+  "version": "1.4.0",
   "type": "module",
   "description": "OpenClaw A2A gateway plugin implementing the A2A v0.3.0 protocol surface",
   "main": "index.ts",

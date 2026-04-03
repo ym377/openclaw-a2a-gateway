@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.4.0] - 2026-04-04
+
+### Added
+
+- **Stale task recovery on startup** — gateway now scans `FileTaskStore` at startup and marks any tasks stuck in non-terminal states (submitted, working, input-required, auth-required, unknown) as `failed` with a clear reason message. Uses terminal-state allowlist for future-proofing. Includes re-entrancy guard matching `task-cleanup.ts` pattern. (#52)
+- **CLI developer experience improvements** (#51):
+  - Peer alias config (`~/.openclaw/a2a-peers.json`) — define named peers with URL + token, shared across all CLI scripts
+  - `a2a-ping.mjs` — health check tool with `--peer`/`--all` modes, reports online/offline status with latency
+  - `a2a-status.mjs` — query task status by ID, supports `--wait` polling with state transition display
+  - Connection retry with exponential backoff (3x, 2/4/8s) for transient network errors
+  - Actionable error diagnostics for ECONNREFUSED, ETIMEDOUT, ENOTFOUND, and 401 errors
+  - Blocked state detection in polling loops (input-required/auth-required exit immediately)
+- **Connection pooling** — reusable HTTP/gRPC connections for outbound A2A calls, reducing handshake overhead for high-frequency peer communication. (zycaskevin, #41)
+
+### Fixed
+
+- `a2a-send.mjs` `--peer` alias was unreachable due to early `!peerUrl` guard in `parseArgs()` — fixed to also check `opts.peer`
+- `a2a-send.mjs` `terminalStates` was missing `rejected`, causing polling to spin until timeout on rejected tasks
+- `a2a-peers.mjs` silently swallowed JSON parse errors — now reports syntax errors with clear diagnostic
+
 ## [1.3.0] - 2026-04-01
 
 ### Added
